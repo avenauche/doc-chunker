@@ -1,0 +1,182 @@
+<div class="app">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Doc Chunker</span>
+    </div>
+    <p class="header-tagline">Split documents into semantic chunks with LangChain.js</p>
+  </header>
+
+  <!-- ── Main two-panel layout ──────────────────────────────────────────── -->
+  <main class="app-main">
+
+    <!-- LEFT: config panel -->
+    <aside class="panel panel-config">
+
+      <!-- File upload -->
+      <section class="section">
+        <h2 class="section-title">1 · Upload Document</h2>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" class="file-input"
+                 accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.xlsm,.csv,.tsv,.html,.htm,.txt,.md,.markdown,.json,.png,.jpg,.jpeg,.gif,.webp" />
+          <div class="upload-idle" id="uploadIdle">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">Drop file here or <span class="upload-link">browse</span></div>
+            <div class="upload-hint">PDF · Word · Excel · PowerPoint · CSV · HTML · Text · Markdown · JSON · Images &nbsp;|&nbsp; max 50 MB</div>
+          </div>
+          <div class="file-info hidden" id="fileInfo">
+            <span class="file-icon">📎</span>
+            <span class="file-name" id="fileName"></span>
+            <span class="file-size" id="fileSize"></span>
+            <button class="btn-icon" id="clearFileBtn" title="Remove file">✕</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Chunking config -->
+      <section class="section">
+        <h2 class="section-title">2 · Semantic Chunking Config</h2>
+
+        <div class="form-group">
+          <label class="form-label" for="chunkSize">Max Chunk Size</label>
+          <input class="form-input" type="number" id="chunkSize"
+                 value="500" min="500" max="1000" step="50" />
+          <span class="form-hint">tokens (approximate)</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="similarityThreshold">Similarity Threshold</label>
+            <input class="form-input" type="number" id="similarityThreshold"
+                   value="0.5" min="0" max="1" step="0.05" />
+            <span class="form-hint">0–1, lower = more splits</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="numSimilaritySentencesLookahead">Lookahead</label>
+            <input class="form-input" type="number" id="numSimilaritySentencesLookahead"
+                   value="3" min="1" max="10" step="1" />
+            <span class="form-hint">sentences</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="dynamicThresholdLowerBound">Threshold Min</label>
+            <input class="form-input" type="number" id="dynamicThresholdLowerBound"
+                   value="0.4" min="0" max="1" step="0.05" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dynamicThresholdUpperBound">Threshold Max</label>
+            <input class="form-input" type="number" id="dynamicThresholdUpperBound"
+                   value="0.8" min="0" max="1" step="0.05" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="combineChunksSimilarityThreshold">Combine Threshold</label>
+            <input class="form-input" type="number" id="combineChunksSimilarityThreshold"
+                   value="0.5" min="0" max="1" step="0.05" />
+            <span class="form-hint">merge similar adjacent chunks</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Combine Chunks</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="combineChunks" value="true" checked />
+                <span>Yes</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="combineChunks" value="false" />
+                <span>No</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Output Format</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="outputFormat" value="text" />
+              <span>Text</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="outputFormat" value="markdown" />
+              <span>Markdown</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="outputFormat" value="json" checked />
+              <span>JSON</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Actions -->
+      <section class="section">
+        <h2 class="section-title">3 · Actions</h2>
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="streamBtn" disabled autofocus>
+            ▶&nbsp; Stream Chunks
+          </button>
+          <button class="btn btn-secondary" id="downloadBtn" disabled>
+            ⬇&nbsp; Download File
+          </button>
+        </div>
+      </section>
+
+      <!-- Vector DB / Embed -->
+      <section class="section hidden" id="embedSection">
+        <h2 class="section-title">4 · Vector DB</h2>
+        <button class="btn btn-secondary" id="embedBtn">
+          ⚡&nbsp; Generate Embeddings
+        </button>
+        <div id="embedStatus" style="font-size: 12px; color: var(--text-2); margin-top: 8px;"></div>
+
+        <!-- Search -->
+        <div id="searchSection" class="hidden" style="margin-top: 12px;">
+          <input type="text" id="searchQuery" class="form-input" placeholder="Search chunks..." />
+          <button class="btn btn-sm" id="searchBtn" style="margin-top: 6px;">🔍 Search</button>
+        </div>
+
+        <!-- Download Voy index -->
+        <div id="downloadSection" class="hidden" style="margin-top: 12px;">
+          <button class="btn btn-sm" id="downloadChunksBtn">📥 Download Voy Index</button>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- RIGHT: output panel -->
+    <div class="panel panel-output">
+
+      <div class="output-header">
+        <div class="output-tabs">
+          <button class="tab-btn tab-btn--active" id="tabChunks" data-tab="chunks">Chunks</button>
+          <button class="tab-btn" id="tabSearch" data-tab="search">Search Results</button>
+        </div>
+        <div class="output-actions hidden" id="outputActions">
+          <span class="stat" id="statChunks">0 chunks</span>
+          <span class="stat" id="statChars">0 chars</span>
+          <button class="btn btn-sm" id="copyBtn">Copy All</button>
+          <button class="btn btn-sm btn-danger" id="clearOutputBtn">Clear</button>
+        </div>
+      </div>
+
+      <!-- Idle placeholder -->
+      <div class="output-idle" id="outputIdle">
+        <div class="idle-icon">🔍</div>
+        <div class="idle-text">Upload a document and press <strong>Stream Chunks</strong></div>
+      </div>
+
+      <!-- Output textarea -->
+      <textarea class="output-textarea hidden" id="chunksContainer" readonly></textarea>
+
+      <!-- Search results textarea -->
+      <textarea class="output-textarea hidden" id="searchResults" readonly placeholder="Search results will appear here..."></textarea>
+
+    </div>
+  </main>
+
+</div>
