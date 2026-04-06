@@ -93,3 +93,6 @@ Max file size: **50 MB**
 - [semantic-chunking](https://github.com/jparkerweb/semantic-chunking) — AI-powered chunking
 - [@xenova/transformers](https://github.com/xenova/transformers.js) — client-side embeddings
 - [Voy](https://github.com/tantaraio/voy) — WASM vector search
+
+## Wiki
+-[wiki](https://deepwiki.com/avenauche/doc-chunker)
